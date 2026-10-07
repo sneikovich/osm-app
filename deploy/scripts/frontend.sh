@@ -7,7 +7,8 @@
 apt-get install -y -qq nginx >/dev/null
 reload=0
 
-for f in index.html app.js style.css; do
+# index.html, style.css, js/ and vendor/ (Leaflet), copied with their relative paths.
+(cd /tmp/provision/www && find . -type f | sed 's|^\./||') | while read -r f; do
     put "/var/www/overpass/$f" 0644 <"/tmp/provision/www/$f" || true
 done
 

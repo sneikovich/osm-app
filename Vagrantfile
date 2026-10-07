@@ -90,8 +90,12 @@ Vagrant.configure("2") do |config|
   config.vm.define "frontend" do |m|
     m.vm.hostname = "frontend"
     m.vm.network "private_network", ip: NET["FRONTEND_IP"]
-    %w[index.html app.js style.css].each do |f|
+    %w[index.html style.css].each do |f|
       m.vm.provision "www-#{f}", type: "file", source: "frontend/#{f}", destination: "/tmp/provision/www/#{f}"
+    end
+    # Trailing slash: upload the directory's contents, not the directory itself.
+    %w[js vendor].each do |d|
+      m.vm.provision "www-#{d}", type: "file", source: "frontend/#{d}/", destination: "/tmp/provision/www/#{d}"
     end
     m.vm.provision "frontend", type: "shell", path: "#{SCRIPTS}/frontend.sh", env: SETTINGS
   end

@@ -54,7 +54,7 @@ Vagrantfile завантажує у VM потрібні файли (provisioner 
 | postgres | `postgres.sh`: пакет, `conf.d/overpass.conf` (`listen_addresses`), рядок у `pg_hba.conf` для IP history, роль і БД |
 | history | `dist/history` (upload), `rust-service.sh` |
 | fetcher | `dist/overpass-server` (upload), `rust-service.sh` |
-| frontend | `index.html`, `app.js`, `style.css` (upload), `frontend.sh`: nginx, сайт із `proxy_pass` на fetcher |
+| frontend | `index.html`, `style.css`, `js/`, `vendor/` (upload), `frontend.sh`: nginx, сайт із `proxy_pass` на fetcher |
 
 `rust-service.sh` — спільний для обох Rust-сервісів. Він створює системного користувача, ставить бінарник, пише `/etc/default/<svc>` і systemd-юніт з hardening, а наприкінці чекає `/healthz`.
 

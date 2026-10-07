@@ -1,71 +1,83 @@
 <!doctype html>
-<html lang="en">
+<html lang="uk">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>overpass</title>
+<title>Що поруч — пошук місць на мапі</title>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="vendor/markercluster/MarkerCluster.css">
+<link rel="stylesheet" href="vendor/markercluster/MarkerCluster.Default.css">
 <link rel="stylesheet" href="style.css">
-<script src="app.js" defer></script>
 </head>
 <body>
-<header>
-  <h1>overpass(1)</h1>
-  <p>fetch OpenStreetMap elements from the Overpass API.</p>
-</header>
+<noscript><p class="noscript">Для роботи сайту потрібен JavaScript.</p></noscript>
 
-<main>
-<form id="q" autocomplete="off">
-  <h2>QUERY</h2>
-  <dl>
-    <dt><label for="tags">tags</label></dt>
-    <dd>
-      <textarea id="tags" name="tags" rows="3" spellcheck="false" required
-        placeholder="amenity=cafe&#10;name"></textarea>
-      <small><code>key=value</code> or <code>key</code>, one per line. all must match.</small>
-    </dd>
+<div class="app">
+  <aside class="panel" id="panel">
+    <header>
+      <h1>Що поруч?</h1>
+      <p class="lead">Знайдіть кафе, аптеки, зарядки та інші місця навколо потрібної точки на мапі.</p>
+    </header>
 
-    <dt>area</dt>
-    <dd>
-      <span class="radios">
-        <label><input type="radio" name="area" value="none" checked> none</label>
-        <label><input type="radio" name="area" value="around"> around</label>
-        <label><input type="radio" name="area" value="bbox"> bbox</label>
-      </span>
-      <input id="coords" name="coords" type="text" spellcheck="false" disabled>
-      <small id="coords-hint">whole planet. slow; use a tag that is rare.</small>
-    </dd>
+    <form id="q" autocomplete="off">
+      <section>
+        <h2><span class="step">1</span> Що шукаємо?</h2>
+        <div class="presets" id="presets" role="radiogroup" aria-label="Категорія"></div>
 
-    <dt><label for="kind">kind</label></dt>
-    <dd>
-      <select id="kind" name="kind">
-        <option value="">all</option>
-        <option>node</option>
-        <option>way</option>
-        <option>relation</option>
-      </select>
-    </dd>
+        <details class="adv" id="adv">
+          <summary>Розширені налаштування</summary>
+          <label for="tags">Власні теги OpenStreetMap
+            <textarea id="tags" rows="3" placeholder="amenity=cafe&#10;cuisine=pizza"></textarea>
+          </label>
+          <p class="hint">По одному в рядку, формат <code>ключ=значення</code> або просто <code>ключ</code>. Мають збігатися всі. Якщо заповнено — категорія ігнорується.</p>
+          <label for="kind">Тип об'єктів
+            <select id="kind"></select>
+          </label>
+        </details>
+      </section>
 
-    <dt><label for="timeout">timeout</label></dt>
-    <dd><input id="timeout" name="timeout" type="number" min="1" max="180" value="25"> s</dd>
-  </dl>
-  <p><button type="submit">[ fetch ]</button></p>
-</form>
+      <section>
+        <h2><span class="step">2</span> Де шукаємо?</h2>
+        <div class="geo">
+          <input id="place" type="search" placeholder="Місто або адреса, напр. Київ, Хрещатик" aria-label="Місто або адреса">
+          <button type="button" id="find" class="secondary">Знайти</button>
+        </div>
+        <ul class="suggest" id="suggest" hidden></ul>
+        <div class="row">
+          <button type="button" id="locate" class="secondary">📍 Моя локація</button>
+          <button type="button" id="view" class="secondary">🗺️ Центр мапи</button>
+        </div>
+        <p class="hint" id="place-hint">Або просто клікніть по мапі.</p>
 
-<section>
-  <h2>RESULT</h2>
-  <p id="status">idle.</p>
-  <noscript><p class="err">error: this page needs javascript to talk to the fetcher.</p></noscript>
-  <div class="scroll">
-    <table id="result" hidden>
-      <thead><tr><th>kind</th><th>id</th><th class="n">lat</th><th class="n">lon</th><th>name</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</section>
-</main>
+        <label for="radius">Радіус пошуку: <strong id="radius-val">500 м</strong>
+          <input id="radius" type="range" min="100" max="5000" step="100" value="500">
+        </label>
+      </section>
 
-<footer>
-  <p>data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, ODbL.</p>
-</footer>
+      <button type="submit" class="primary" id="go">Знайти місця</button>
+    </form>
+
+    <section class="results" aria-live="polite">
+      <div id="status" class="status" role="status">Оберіть категорію та місце, потім натисніть «Знайти місця».</div>
+      <div class="toolbar" id="toolbar" hidden>
+        <button type="button" class="link" id="dl-csv">⬇ CSV</button>
+        <button type="button" class="link" id="dl-json">⬇ GeoJSON</button>
+        <button type="button" class="link" id="share">🔗 Копіювати посилання</button>
+      </div>
+      <ol class="list" id="list"></ol>
+    </section>
+
+    <footer>Дані © учасники <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, ліцензія ODbL, отримано через Overpass API.</footer>
+  </aside>
+
+  <main class="mapwrap">
+    <button type="button" class="toggle" id="toggle" aria-controls="panel" aria-expanded="true">☰ Меню</button>
+    <div id="map" role="application" aria-label="Мапа"></div>
+  </main>
+</div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="vendor/markercluster/leaflet.markercluster.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
