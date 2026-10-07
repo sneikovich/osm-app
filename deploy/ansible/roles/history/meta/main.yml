@@ -1,0 +1,11 @@
+dependencies:
+  - role: rust_service
+    vars:
+      svc_name: history
+      svc_binary: history
+      svc_description: Overpass query history
+      svc_port: "{{ history_port }}"
+      svc_env:
+        HISTORY_LISTEN: "0.0.0.0:{{ history_port }}"
+        DATABASE_URL: "postgres://{{ db_user }}:{{ db_password }}@{{ postgres_ip }}:{{ postgres_port }}/{{ db_name }}"
+        HISTORY_CONNECT_WAIT: 60

@@ -1,0 +1,21 @@
+# Rust build output (overpass-api-fetcher/, history/)
+target/
+
+# Static binaries from deploy/build.sh
+deploy/dist/
+
+# Vagrant machine state
+.vagrant/
+
+# Ansible
+*.retry
+
+# Local overrides for compose (POSTGRES_PASSWORD etc.)
+.env
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store

@@ -1,0 +1,8 @@
+#!/bin/sh
+# Sourced by the nginx entrypoint before templates are rendered.
+# Default the proxy's DNS resolver to whatever the container runtime configured
+# (127.0.0.11 on docker, the network gateway on podman, kube-dns on k8s).
+if [ -z "${NGINX_RESOLVER:-}" ]; then
+    NGINX_RESOLVER=$(awk '/^nameserver/ { print $2; exit }' /etc/resolv.conf)
+    export NGINX_RESOLVER
+fi

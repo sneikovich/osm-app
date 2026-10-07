@@ -1,0 +1,62 @@
+# Params: svc_name, svc_binary (file in dist_dir), svc_port, svc_env (dict).
+
+- name: "{{ svc_name }}: binary must be built on the host"
+  ansible.builtin.stat:
+    path: "{{ dist_dir }}/{{ svc_binary }}"
+  delegate_to: localhost
+  become: false
+  register: svc_bin
+
+- name: "{{ svc_name }}: fail early without a binary"
+  ansible.builtin.fail:
+    msg: "{{ dist_dir }}/{{ svc_binary }} not found; run deploy/build.sh first"
+  when: not svc_bin.stat.exists
+
+- name: "{{ svc_name }}: system user"
+  ansible.builtin.user:
+    name: "{{ svc_name }}"
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: "{{ svc_name }}: binary"
+  ansible.builtin.copy:
+    src: "{{ dist_dir }}/{{ svc_binary }}"
+    dest: "/usr/local/bin/{{ svc_binary }}"
+    mode: "0755"
+  notify: restart service
+
+- name: "{{ svc_name }}: environment"
+  ansible.builtin.template:
+    src: env.j2
+    dest: "/etc/default/{{ svc_name }}"
+    owner: root
+    group: "{{ svc_name }}"
+    mode: "0640"
+  notify: restart service
+
+- name: "{{ svc_name }}: systemd unit"
+  ansible.builtin.template:
+    src: service.j2
+    dest: "/etc/systemd/system/{{ svc_name }}.service"
+    mode: "0644"
+  notify: restart service
+
+- name: "{{ svc_name }}: enabled and running"
+  ansible.builtin.systemd_service:
+    name: "{{ svc_name }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Apply pending restarts
+  ansible.builtin.meta: flush_handlers
+
+- name: "{{ svc_name }}: healthy"
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ svc_port }}/healthz"
+  register: health
+  until: health.status == 200
+  retries: 30
+  delay: 2
+  changed_when: false

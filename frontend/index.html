@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>overpass</title>
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<header>
+  <h1>overpass(1)</h1>
+  <p>fetch OpenStreetMap elements from the Overpass API.</p>
+</header>
+
+<main>
+<form id="q" autocomplete="off">
+  <h2>QUERY</h2>
+  <dl>
+    <dt><label for="tags">tags</label></dt>
+    <dd>
+      <textarea id="tags" name="tags" rows="3" spellcheck="false" required
+        placeholder="amenity=cafe&#10;name"></textarea>
+      <small><code>key=value</code> or <code>key</code>, one per line. all must match.</small>
+    </dd>
+
+    <dt>area</dt>
+    <dd>
+      <span class="radios">
+        <label><input type="radio" name="area" value="none" checked> none</label>
+        <label><input type="radio" name="area" value="around"> around</label>
+        <label><input type="radio" name="area" value="bbox"> bbox</label>
+      </span>
+      <input id="coords" name="coords" type="text" spellcheck="false" disabled>
+      <small id="coords-hint">whole planet. slow; use a tag that is rare.</small>
+    </dd>
+
+    <dt><label for="kind">kind</label></dt>
+    <dd>
+      <select id="kind" name="kind">
+        <option value="">all</option>
+        <option>node</option>
+        <option>way</option>
+        <option>relation</option>
+      </select>
+    </dd>
+
+    <dt><label for="timeout">timeout</label></dt>
+    <dd><input id="timeout" name="timeout" type="number" min="1" max="180" value="25"> s</dd>
+  </dl>
+  <p><button type="submit">[ fetch ]</button></p>
+</form>
+
+<section>
+  <h2>RESULT</h2>
+  <p id="status">idle.</p>
+  <noscript><p class="err">error: this page needs javascript to talk to the fetcher.</p></noscript>
+  <div class="scroll">
+    <table id="result" hidden>
+      <thead><tr><th>kind</th><th>id</th><th class="n">lat</th><th class="n">lon</th><th>name</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+</main>
+
+<footer>
+  <p>data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, ODbL.</p>
+</footer>
+</body>
+</html>

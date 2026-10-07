@@ -1,0 +1,51 @@
+- name: nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Web root
+  ansible.builtin.file:
+    path: /var/www/overpass
+    state: directory
+    mode: "0755"
+
+- name: Static files
+  ansible.builtin.copy:
+    src: "{{ frontend_src }}/{{ item }}"
+    dest: "/var/www/overpass/{{ item }}"
+    mode: "0644"
+  loop: [index.html, app.js, style.css]
+
+- name: Site config
+  ansible.builtin.template:
+    src: overpass.conf.j2
+    dest: /etc/nginx/sites-available/overpass
+    mode: "0644"
+  notify: reload nginx
+
+- name: Enable site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/overpass
+    dest: /etc/nginx/sites-enabled/overpass
+    state: link
+  notify: reload nginx
+
+- name: Disable the stock default site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+- name: Running
+  ansible.builtin.systemd_service:
+    name: nginx
+    enabled: true
+    state: started
+
+- name: Apply pending reloads
+  ansible.builtin.meta: flush_handlers
+
+- name: Healthy
+  ansible.builtin.uri:
+    url: http://127.0.0.1/healthz
+  changed_when: false

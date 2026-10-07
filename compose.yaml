@@ -1,0 +1,45 @@
+services:
+  fetcher:
+    build: ./overpass-api-fetcher
+    environment:
+      OVERPASS_ENDPOINT: ${OVERPASS_ENDPOINT:-https://overpass-api.de/api/interpreter}
+      OVERPASS_RETRIES: "3"
+      HISTORY_URL: http://history:8081
+    # no published ports: only reachable through the frontend proxy
+
+  frontend:
+    build: ./frontend
+    environment:
+      FETCHER_URL: http://fetcher:8080
+    ports:
+      - "8080:80"
+    depends_on:
+      - fetcher
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 3s
+
+  history:
+    build: ./history
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-history}:${POSTGRES_PASSWORD:-history}@postgres/${POSTGRES_DB:-history}
+    depends_on:
+      - postgres
+    restart: on-failure
+
+  postgres:
+    image: docker.io/library/postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-history}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-history}
+      POSTGRES_DB: ${POSTGRES_DB:-history}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-history}"]
+      interval: 10s
+      timeout: 3s
+
+volumes:
+  pgdata:

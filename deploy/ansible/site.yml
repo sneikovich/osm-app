@@ -1,0 +1,27 @@
+# Whole stack. Groups come from the Vagrantfile (ansible.groups).
+# Plays run in order, so postgres is ready before history migrates.
+
+- name: base
+  hosts: all
+  become: true
+  roles: [common]
+
+- name: postgres
+  hosts: database
+  become: true
+  roles: [postgres]
+
+- name: history
+  hosts: history_svc
+  become: true
+  roles: [history]
+
+- name: fetcher
+  hosts: fetcher_svc
+  become: true
+  roles: [fetcher]
+
+- name: frontend
+  hosts: web
+  become: true
+  roles: [frontend]

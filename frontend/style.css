@@ -1,0 +1,130 @@
+/* terminal-ish: one font, two colors, no ornaments. */
+
+:root {
+  --bg: #0c0c0c;
+  --fg: #c6c6c6;
+  --dim: #7a7a7a;
+  --head: #87d75f;
+  --link: #5fd7d7;
+  --err: #ff5f5f;
+  --rule: #303030;
+  --field: #161616;
+  color-scheme: dark;
+  accent-color: var(--head);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --dim: #6a6a6a;
+    --head: #1a1a1a;
+    --link: #0000cc;
+    --err: #b00000;
+    --rule: #cfcfcf;
+    --field: #ffffff;
+    color-scheme: light;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 ui-monospace, "DejaVu Sans Mono", "Liberation Mono", Menlo, monospace;
+}
+
+body {
+  max-width: 80ch;
+  margin: 0 auto;
+  padding: 2ch 2ch 4ch;
+}
+
+h1, h2 {
+  font-size: 1em;
+  font-weight: bold;
+  color: var(--head);
+  margin: 2em 0 0.5em;
+}
+h1 { margin-top: 0; }
+h1 + p { margin-top: 0; color: var(--dim); }
+
+a { color: var(--link); }
+a:visited { color: var(--link); }
+
+small {
+  display: block;
+  color: var(--dim);
+  font-size: 1em;
+}
+
+code { color: var(--fg); }
+
+/* man-page style definition list: label column, then indented body */
+dl {
+  display: grid;
+  grid-template-columns: 10ch 1fr;
+  gap: 0.75em 1ch;
+  margin: 0 0 0 4ch;
+}
+dt { padding-top: 0.25em; }
+dd { margin: 0; }
+
+input, select, textarea, button {
+  font: inherit;
+  color: var(--fg);
+  background: var(--field);
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  padding: 0.25em 0.5ch;
+}
+textarea, input[type="text"] { width: 100%; }
+input[type="number"] { width: 8ch; }
+input:disabled { opacity: 0.4; }
+input[type="radio"] { margin: 0 0.5ch 0 0; }
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: 1px solid var(--head);
+  outline-offset: -1px;
+}
+
+.radios { display: block; margin-bottom: 0.25em; }
+.radios label { margin-right: 2ch; white-space: nowrap; }
+
+button {
+  cursor: pointer;
+  color: var(--head);
+  margin-left: 4ch;
+}
+button:hover { background: var(--rule); }
+button:disabled { cursor: wait; opacity: 0.5; }
+
+#status { margin-left: 4ch; }
+.err { color: var(--err); }
+
+.scroll { overflow-x: auto; margin-left: 4ch; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+th, td {
+  text-align: left;
+  padding: 0 1ch;
+  white-space: nowrap;
+  border-bottom: 1px dashed var(--rule);
+}
+th { color: var(--dim); font-weight: normal; }
+td:last-child { white-space: normal; }
+.n { text-align: right; }
+
+footer {
+  margin-top: 4em;
+  color: var(--dim);
+}
+
+@media (max-width: 60ch) {
+  dl { grid-template-columns: 1fr; margin-left: 0; gap: 0.25em; }
+  dt { padding-top: 0.75em; }
+  button, #status, .scroll { margin-left: 0; }
+}
