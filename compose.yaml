@@ -4,7 +4,10 @@ services:
     environment:
       OVERPASS_ENDPOINT: ${OVERPASS_ENDPOINT:-https://overpass-api.de/api/interpreter}
       OVERPASS_RETRIES: "3"
-      HISTORY_URL: http://history:8081
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-app}:${RABBITMQ_PASSWORD:-app}@rabbitmq:5672/%2f
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     # no published ports: only reachable through the frontend proxy
 
   frontend:
@@ -24,8 +27,12 @@ services:
     build: ./history
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-history}:${POSTGRES_PASSWORD:-history}@postgres/${POSTGRES_DB:-history}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-app}:${RABBITMQ_PASSWORD:-app}@rabbitmq:5672/%2f
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     restart: on-failure
 
   postgres:
@@ -41,5 +48,21 @@ services:
       interval: 10s
       timeout: 3s
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "15672:15672" # management UI; AMQP (5672) stays internal
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-app}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-app}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
 volumes:
   pgdata:
+  rabbitmq-data:
