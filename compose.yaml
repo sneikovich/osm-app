@@ -5,8 +5,11 @@ services:
       OVERPASS_ENDPOINT: ${OVERPASS_ENDPOINT:-https://overpass-api.de/api/interpreter}
       OVERPASS_RETRIES: "3"
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-app}:${RABBITMQ_PASSWORD:-app}@rabbitmq:5672/%2f
+      REDIS_URL: redis://redis:6379
     depends_on:
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     # no published ports: only reachable through the frontend proxy
 
@@ -62,6 +65,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 6
+
+  # Pure cache: no persistence, bounded memory, least-recently-used eviction.
+  redis:
+    image: docker.io/library/redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 volumes:
   pgdata:

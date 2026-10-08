@@ -32,6 +32,7 @@ test("distance ≈ 111 км на градус широти", () => {
 
 test("errorMessage / safeUrl / toCSV", () => {
   assert.match(errorMessage(504), /радіус/);
+  assert.match(errorMessage(429), /Забагато/);
   assert.equal(safeUrl("javascript:alert(1)"), "");
   assert.equal(safeUrl("example.com"), "https://example.com/");
   assert.match(toCSV([{ key: "node/1", name: 'А"Б', address: "", lat: 1, lon: 2, hours: "", phone: "", website: "", osmUrl: "u" }]), /"А""Б"/);
